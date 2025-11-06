@@ -1,0 +1,59 @@
+name: Expo Gradle Android Build
+
+on:
+  workflow_dispatch:   # manual trigger only
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          cd example
+          npm install -g expo-cli
+          npm install
+
+      # 4. Prebuild Android project
+      - name: Prebuild Android
+        run: |
+          npx expo prebuild --platform android --non-interactive
+
+      # 5. Setup Java & Android SDK
+      - name: Set up Java and Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 6. Build APK
+      - name: Build Android release APK (unsigned)
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      # 7. Optional: Debug release folder contents
+      - name: List files in release folder
+        run: ls -l android/app/build/outputs/apk/release
+
+      # 8. Find the APK dynamically
+      - name: Find APK file
+        id: find_apk
+        run: |
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+
+      # 9. Upload APK artifact
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-gradle-apk
+          path: ${{ env.APK_PATH }}
