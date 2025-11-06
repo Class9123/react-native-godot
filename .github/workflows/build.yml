@@ -22,13 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd example
-          npm install -g expo-cli
           npm install
-
-      # 4. Prebuild Android project
-      - name: Prebuild Android
-        run: |
-          npx expo prebuild --platform android --non-interactive
 
       # 5. Setup Java & Android SDK
       - name: Set up Java and Android SDK
