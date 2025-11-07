@@ -21,10 +21,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Node.js
+      - name: Set up Node.js (use Node 20+ for Metro)
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Enable Corepack (for Yarn 4.x)
         run: corepack enable
@@ -32,7 +32,7 @@ jobs:
       - name: Verify Yarn version
         run: yarn --version
 
-      - name: Install dependencies
+      - name: Install dependencies and prebuilt Godot
         run: |
           cd example
           yarn install
@@ -44,7 +44,7 @@ jobs:
       - name: Build Debug APK
         run: |
           cd example/android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
