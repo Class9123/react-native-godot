@@ -1,51 +1,48 @@
 name: Expo Gradle Android Build
 
 on:
-  workflow_dispatch:   # manual trigger only
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3. Install dependencies
       - name: Install dependencies
-        run: |
-          cd example
-          npm install
+        working-directory: example
+        run: npm install
 
-      # 5. Setup Java & Android SDK
       - name: Set up Java and Android SDK
         uses: android-actions/setup-android@v3
 
-      # 6. Build APK
       - name: Build Android release APK (unsigned)
-        run: |
-          cd android
-          ./gradlew assembleRelease
+        working-directory: example/android
+        run: ./gradlew assembleRelease
 
-      # 7. Optional: Debug release folder contents
       - name: List files in release folder
-        run: ls -l android/app/build/outputs/apk/release
+        working-directory: example/android/app/build/outputs/apk/release
+        run: ls -l .
 
-      # 8. Find the APK dynamically
       - name: Find APK file
         id: find_apk
+        working-directory: example/android
         run: |
-          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+          APK_REL_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_REL_PATH" ]; then
+            echo "No APK found" >&2
+            exit 1
+          fi
+          APK_ABS_PATH="$(pwd)/$APK_REL_PATH"
+          echo "APK_PATH=$APK_ABS_PATH" >> $GITHUB_ENV
 
-      # 9. Upload APK artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
